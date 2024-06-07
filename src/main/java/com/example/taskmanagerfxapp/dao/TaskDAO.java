@@ -25,7 +25,7 @@ public class TaskDAO {
         for(int i = 1; i < 25; i++)
         {
             if(i != 21)
-                tasks.add(new Task(taskDAO.getTopic(i),false,false,false,false, url + i ));
+                tasks.add(new Task(taskDAO.getTopic(i),true,false,false,false, url + i ));
         }
         return tasks;
     }
