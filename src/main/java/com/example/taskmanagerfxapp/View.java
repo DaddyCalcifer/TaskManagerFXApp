@@ -18,7 +18,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class View {
 
@@ -36,8 +39,24 @@ public class View {
         String link1 = "https://sites.google.com/view/course-of-study1-c/главная/источники";
         String link2 = "https://sites.google.com/view/course-of-study1-c/главная/справочник-по-языку-си";
         String link3 = "https://sites.google.com/view/course-of-study1-c/главная/инструменты-разработки";
-        TaskDAO taskDAO = new TaskDAO(url);
-        var tasks = taskDAO.getTasksFromSite();
+        TaskDAO taskDAO = new TaskDAO("");
+        List<Task> tasks = new ArrayList<Task>();
+        File pageDir = new File("pages");
+        if (!pageDir.exists()) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Образовательный портал");
+            alert.setHeaderText("Подгрузка данных");
+            alert.setContentText("Для работы портала требуется загрузка данных. Для подтверждения загрузки нажмите ОК, портал откроется после окончания подгрузки данных.");
+            alert.showAndWait().ifPresent(rs -> {
+                if (rs == ButtonType.OK) {
+                    System.out.println("к");
+                }
+            });
+            System.out.println("Страницы не загружены - приложение работает с сайтом, паралельно подгружает страницы.");
+            PageLoader.loadPages();
+        }
+        tasks = taskDAO.getTasksFromDisk("pages");
+
         data.addAll(tasks);
 
         TableColumn<Task, String> topicCol = new TableColumn<>("Тема");
@@ -66,8 +85,7 @@ public class View {
 
         TableColumn<Task, Boolean> task1Col = new TableColumn<>("Задание 1");
         task1Col.setCellValueFactory(cellData -> cellData.getValue().task1Property());
-
-
+        task1Col.setCellFactory(CheckBoxTableCell.forTableColumn(task1Col));
         task1Col.setEditable(true);
 
         TableColumn<Task, Boolean> task2Col = new TableColumn<>("Задание 2");
@@ -119,9 +137,9 @@ public class View {
         WebEngine webEnginelink = webViewlink.getEngine();
 
         // Обработчики событий для кнопок (загрузка страниц в webView)
-        blink1.setOnAction(event -> webEnginelink.load(link1));
-        blink2.setOnAction(event -> webEnginelink.load(link2));
-        blink3.setOnAction(event -> webEnginelink.load(link3));
+        blink1.setOnAction(event -> webEnginelink.load(new File("pages/page1.html").toURI().toString()));
+        blink2.setOnAction(event -> webEnginelink.load(new File("pages/page2.html").toURI().toString()));
+        blink3.setOnAction(event -> webEnginelink.load(new File("pages/page3.html").toURI().toString()));
 
         // Горизонтальная панель для кнопок
         HBox linkBox = new HBox(10, blink1, blink2, blink3);
@@ -147,9 +165,17 @@ public class View {
 
     private void openWebpage(String url) {
         // Переключение на вкладку с веб-просмотром и загрузка URL
-        TabPane tabPane = (TabPane) table.getScene().getRoot();
-        tabPane.getSelectionModel().select(1);
-        webEngine.load(url);
+        if(url.contains("http")) {
+            TabPane tabPane = (TabPane) table.getScene().getRoot();
+            tabPane.getSelectionModel().select(1);
+            webEngine.load(url);
+        }
+        else {
+            System.out.println(url);
+            TabPane tabPane = (TabPane) table.getScene().getRoot();
+            tabPane.getSelectionModel().select(1);
+            webEngine.load(new File(url).toURI().toString());
+        }
     }
 
     public String getTopic(String url) {
